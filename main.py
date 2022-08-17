@@ -3,6 +3,10 @@ from PyPDF2 import PdfFileReader
 from io import BytesIO
 import requests
 
+from elasticSearch import ElasticSearchUtil
+
+from doc_preprocessor.documentParser import DocumentParser
+
 app = FastAPI()
 
 summarization_url = "http://f1b4-34-75-184-202.ngrok.io"
@@ -11,6 +15,14 @@ summarization_url = "http://f1b4-34-75-184-202.ngrok.io"
 @app.get("/")
 def root():
     return "Hello World"
+
+
+@app.post("/pdfUpload")
+async def uploadPdf(file: UploadFile):
+    parser = DocumentParser(await processPdf(file))
+    parsedMap = parser.parse()
+    es = ElasticSearchUtil()
+    return es.insertToIndex(parsedMap)
 
 
 @app.post("/summarize")
