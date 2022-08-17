@@ -1,18 +1,11 @@
-from ast import Bytes
-from fastapi import FastAPI, File, UploadFile
-from pydantic import BaseModel
-from summary_service import summarizer_main
+from fastapi import FastAPI,  UploadFile
 from PyPDF2 import PdfFileReader
 from io import BytesIO
+import requests
 
-
-model = summarizer_main.get_summary_model()
 app = FastAPI()
 
-
-class ArticleModel(BaseModel):
-    body: str
-    req_lines: int = 5
+summarization_url = "http://f1b4-34-75-184-202.ngrok.io"
 
 
 @app.get("/")
@@ -22,10 +15,14 @@ def root():
 
 @app.post("/summarize")
 async def receivePdf(file: UploadFile):
+    summary = {"error": "error"}
     print(file.filename)
     docText = await processPdf(file)
-    summary = model(docText, ratio=0.05)
-    return summary
+    api = summarization_url+"/summarize"
+    print("APII: {0}".format(api))
+    summary = requests.post(api, json={"text": docText})
+
+    return {"result": summary.text}
 
 
 async def processPdf(file: UploadFile):
