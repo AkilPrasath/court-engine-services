@@ -6,7 +6,6 @@ from io import BytesIO
 import requests
 from elasticSearch import ElasticSearchUtil
 from doc_preprocessor.documentParser import DocumentParser
-import uvicorn
 
 from elasticSearchModel import SearchModel
 from mongodb.mongo_util import uploadToMongo
@@ -22,11 +21,12 @@ def root():
 
 @app.post("/pdfUpload")
 async def uploadPdf(file: UploadFile):
-    parser = DocumentParser(await processPdf(file))
+    bytes = BytesIO(await file.read())
+    parser = DocumentParser(await processPdf(bytes))
     parsedMap = parser.parse()
     elasticSearch = ElasticSearchUtil()
     id = uuid.uuid4()
-    await uploadToMongo(file, id)
+    await uploadToMongo(bytes, id)
     return elasticSearch.insertToIndex(parsedMap, id)
 
 
@@ -49,8 +49,7 @@ def search(searchModel: SearchModel):
     return result
 
 
-async def processPdf(file: UploadFile):
-    bytes = BytesIO(await file.read())
+async def processPdf(bytes):
     pdf = PdfFileReader(bytes)
     doc_text = ""
     for pageNo in range(pdf.numPages):
