@@ -1,6 +1,8 @@
 
 import uuid
 import requests
+
+from doc_preprocessor.grammar import getProcessedQueryText
 base_url = "http://localhost:9200/"
 indexName = "judgements/_doc/"
 
@@ -19,9 +21,12 @@ class ElasticSearchUtil():
         "respondent" : "",
         "petitioner" : "",
         "date" : "",
-        "section" : "",
+        "section" : [],
+        "text section" : [],
     }
     '''
 
     def search(self, queryText, filters):
+        processedQueryText = getProcessedQueryText(queryText=queryText)
+
         pass

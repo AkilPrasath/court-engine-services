@@ -9,7 +9,7 @@ from doc_preprocessor.documentParser import DocumentParser
 
 app = FastAPI()
 
-summarization_url = "http://f1b4-34-75-184-202.ngrok.io"
+summarization_url = "http://c8c8-34-74-123-138.ngrok.io"
 
 
 @app.get("/")
