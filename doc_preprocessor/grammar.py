@@ -34,8 +34,5 @@ def getProcessedQueryText(queryText="How can I export elasticsearch index to my 
     additionalText = ""
     for pair in verbSynPair:
         additionalText += pair[0]+" "+" ".join(pair[1])
-    print(additionalText)
+
     return queryText+additionalText
-
-
-print(getProcessedQueryText())

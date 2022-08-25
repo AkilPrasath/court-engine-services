@@ -1,12 +1,15 @@
+import uuid
 from fastapi import FastAPI,  UploadFile
+
 from PyPDF2 import PdfFileReader
 from io import BytesIO
 import requests
-
 from elasticSearch import ElasticSearchUtil
-
 from doc_preprocessor.documentParser import DocumentParser
+import uvicorn
 
+from elasticSearchModel import SearchModel
+from mongodb.mongo_util import uploadToMongo
 app = FastAPI()
 
 summarization_url = "http://c8c8-34-74-123-138.ngrok.io"
@@ -21,8 +24,10 @@ def root():
 async def uploadPdf(file: UploadFile):
     parser = DocumentParser(await processPdf(file))
     parsedMap = parser.parse()
-    es = ElasticSearchUtil()
-    return es.insertToIndex(parsedMap)
+    elasticSearch = ElasticSearchUtil()
+    id = uuid.uuid4()
+    await uploadToMongo(file, id)
+    return elasticSearch.insertToIndex(parsedMap, id)
 
 
 @app.post("/summarize")
@@ -35,6 +40,13 @@ async def receivePdf(file: UploadFile):
     summary = requests.post(api, json={"text": docText})
 
     return {"result": summary.text}
+
+
+@app.get("/search")
+def search(searchModel: SearchModel):
+    elasticSearch = ElasticSearchUtil()
+    result = elasticSearch.search(searchModel)
+    return result
 
 
 async def processPdf(file: UploadFile):
