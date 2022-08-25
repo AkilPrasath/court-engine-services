@@ -5,7 +5,7 @@ import requests
 from doc_preprocessor.grammar import getProcessedQueryText
 from elasticSearchModel import SearchModel
 base_url = "http://localhost:9200/"
-indexName = "judgements/"
+indexName = "finaljudgements/"
 
 
 class ElasticSearchUtil():
