@@ -9,8 +9,22 @@ from doc_preprocessor.documentParser import DocumentParser
 
 from elasticSearchModel import SearchModel
 from mongodb.mongo_util import uploadToMongo
+from fastapi.middleware.cors import CORSMiddleware
 app = FastAPI()
+origins = [
+    "http://localhost.tiangolo.com",
+    "https://localhost.tiangolo.com",
+    "http://localhost",
+    "http://localhost:3000",
+]
 
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
 summarization_url = "http://c8c8-34-74-123-138.ngrok.io"
 
 
@@ -42,9 +56,11 @@ async def receivePdf(file: UploadFile):
     return {"result": summary.text}
 
 
-@app.get("/search")
+@app.post("/search")
 def search(searchModel: SearchModel):
+    print("here")
     elasticSearch = ElasticSearchUtil()
+    print(searchModel.dict)
     result = elasticSearch.search(searchModel)
     return result
 

@@ -28,11 +28,11 @@ class ElasticSearchUtil():
         baseQuery = {}
         queryList = []
         queryList.extend(self.generateSingleQuery(
-            searchModel.respondents, "respondent"))
+            searchModel.respondent, "respondent"))
         queryList.extend(self.generateSingleQuery(
-            searchModel.petitioners, "petitioner"))
+            searchModel.petitioner, "petitioner"))
         queryList.extend(self.generateSingleQuery(
-            searchModel.sections, "sections"))
+            searchModel.section, "sections"))
         queryList.extend(self.generateSingleQuery(
             searchModel.text_sections, "textSections"))
         baseQuery["query"] = {

@@ -7,7 +7,8 @@ from io import BytesIO
 
 
 class DocumentParser():
-    def __init__(self, raw_text: str):
+
+    def _init_(self, raw_text):
         self.textSections = []
         self.sections = []
         self.text = re.sub(r'[^\x00-\x7F]+', " ", raw_text)
@@ -16,9 +17,11 @@ class DocumentParser():
         self.petitioner_list = []
         self.respondent_list = []
         self.judgementDate_list = []
+        self.courtType = ""
+        self.state = ""
+        self.judgementNumber = 0
 
     def parse(self):
-
         # Petitioner
         self.petitioner_list.extend(self.extractParam(
             "petitioner", ["vs", "versus", "respondent"], 5))
@@ -42,18 +45,59 @@ class DocumentParser():
 
         # sections
         self.parseSections()
+
+        # Court type
+        self.setCourtType()
+
+        # Judgement Number
+        self.setJudgementNumber()
         return {
             "petitioner": self.petitioner_list,
             "respondent": self.respondent_list,
             "judgement-date": self.judgementDate_list,
             "sections": self.sections,
             "textSections": self.textSections,
+            "CourtType": self.courtType,
+            "JudgementNumber": self.judgementNumber,
+            "state": self.state,
             "raw_text": self.text
         }
 
     def parseSections(self):
         self.parseSectionsCivil()
         self.parseSectionsCriminal()
+
+    def setCourtType(self):
+        lines = self.lines
+        for line in lines:
+            if("high court" in line.lower()):
+                self.courtType = "High Court"
+                self.setState(line)
+                return
+            elif("supreme court" in line.lower()):
+                self.courtType = "Supreme Court"
+                return
+            else:
+                self.courtType = "Unknown"
+
+    def setJudgementNumber(self):
+        lines = self.lines
+        for line in lines:
+            judgementNumberLine = ""
+            if(" no." in line.lower()):
+                judgementNumberLine = line.lower().split(" no.")[1].strip()
+                self.judgementNumber = judgementNumberLine
+                return
+            elif(" no(s)." in line.lower()):
+                judgementNumberLine = line.lower().split(" no(s).")[1].strip()
+                self.judgementNumber = judgementNumberLine
+                return
+
+    def setState(self, line: str):
+        if(" at " in line.lower()):
+            self.state = line.lower().split(" at ")[1].strip()
+        elif(" of " in line.lower()):
+            self.state = line.lower().split(" of ")[1].strip()
 
     def parseSectionsCivil(self):
         singleLineText = self.text.replace("\n", " ")
