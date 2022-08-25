@@ -35,6 +35,7 @@ def root():
 
 @app.post("/pdfUpload")
 async def uploadPdf(file: UploadFile):
+    print("sadfasdfdsjkfsaldgfhslfujd")
     bytes = BytesIO(await file.read())
     parser = DocumentParser(await processPdf(bytes))
     parsedMap = parser.parse()

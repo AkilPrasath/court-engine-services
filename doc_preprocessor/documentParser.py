@@ -8,7 +8,7 @@ from io import BytesIO
 
 class DocumentParser():
 
-    def _init_(self, raw_text):
+    def __init__(self, raw_text):
         self.textSections = []
         self.sections = []
         self.text = re.sub(r'[^\x00-\x7F]+', " ", raw_text)
@@ -54,13 +54,13 @@ class DocumentParser():
         return {
             "petitioner": self.petitioner_list,
             "respondent": self.respondent_list,
-            "judgement-date": self.judgementDate_list,
-            "sections": self.sections,
-            "textSections": self.textSections,
-            "CourtType": self.courtType,
+            "date": self.judgementDate_list,
+            "section": self.sections,
+            "text_sections": self.textSections,
+            "court": self.courtType,
             "JudgementNumber": self.judgementNumber,
-            "state": self.state,
-            "raw_text": self.text
+            "highCourtLocation": self.state,
+            "queryText": self.text,
         }
 
     def parseSections(self):

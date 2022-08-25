@@ -16,4 +16,4 @@ async def uploadToMongo(bytes, id):
 
     collection.insert_one({"file_id": str(fid), "doc_id": str(id)})
 
-    print(fs.get(fid).read())
+    # print(fs.get(fid).read())
