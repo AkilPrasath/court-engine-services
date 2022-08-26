@@ -1,9 +1,6 @@
 import datetime
 import re
-from fastapi import UploadFile
 import datefinder
-from PyPDF2 import PdfFileReader
-from io import BytesIO
 
 
 class DocumentParser():

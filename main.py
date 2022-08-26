@@ -6,10 +6,12 @@ from io import BytesIO
 import requests
 from elasticSearch import ElasticSearchUtil
 from doc_preprocessor.documentParser import DocumentParser
-
+from pydantic import BaseModel
 from elasticSearchModel import SearchModel
-from mongodb.mongo_util import uploadToMongo
+from mongodb.mongo_util import searchSections, uploadToMongo
 from fastapi.middleware.cors import CORSMiddleware
+
+from sectionModel import SectionModel
 app = FastAPI()
 origins = [
     "http://localhost.tiangolo.com",
@@ -39,8 +41,8 @@ async def uploadPdf(file: UploadFile):
     bytes = BytesIO(await file.read())
     parser = DocumentParser(await processPdf(bytes))
     parsedMap = parser.parse()
-    elasticSearch = ElasticSearchUtil()
     id = uuid.uuid4()
+    elasticSearch = ElasticSearchUtil()
     await uploadToMongo(bytes, id)
     return elasticSearch.insertToIndex(parsedMap, id)
 
@@ -59,11 +61,16 @@ async def receivePdf(file: UploadFile):
 
 @app.post("/search")
 def search(searchModel: SearchModel):
-    print("here")
     elasticSearch = ElasticSearchUtil()
     print(searchModel.dict)
     result = elasticSearch.search(searchModel)
     return result
+
+
+@app.post("/section")
+def section(sectionModel: SectionModel):
+    finalMap = searchSections(sectionModel.sections)
+    return finalMap
 
 
 async def processPdf(bytes):
