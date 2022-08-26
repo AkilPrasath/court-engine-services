@@ -12,6 +12,10 @@ from mongodb.mongo_util import searchSections, uploadToMongo
 from fastapi.middleware.cors import CORSMiddleware
 
 from sectionModel import SectionModel
+# from mongodb.mongo_util import uploadToMongo
+from fastapi.middleware.cors import CORSMiddleware
+
+from searchQueryModel import SearchQueryModel
 app = FastAPI()
 origins = [
     "http://localhost.tiangolo.com",
@@ -43,7 +47,7 @@ async def uploadPdf(file: UploadFile):
     parsedMap = parser.parse()
     id = uuid.uuid4()
     elasticSearch = ElasticSearchUtil()
-    await uploadToMongo(bytes, id)
+    # await uploadToMongo(bytes, id)
     return elasticSearch.insertToIndex(parsedMap, id)
 
 
@@ -73,6 +77,14 @@ def section(sectionModel: SectionModel):
     return finalMap
 
 
+@app.post("/searchQuery")
+def searchQuery(queryStringModel: SearchQueryModel):
+    elasticSearch = ElasticSearchUtil()
+    result = elasticSearch.searchQuery(queryStringModel.queryString)
+    response = processSearchQueryResponse(result, queryStringModel.queryString)
+    return response
+
+
 async def processPdf(bytes):
     pdf = PdfFileReader(bytes)
     doc_text = ""
@@ -82,3 +94,28 @@ async def processPdf(bytes):
         text = " ".join(text.split("\n"))
         doc_text += text
     return doc_text
+
+
+def processSearchQueryResponse(response, queryString):
+    hitsList = response["hits"]["hits"]
+    responseList = []
+    nextWordList = []
+    for hit in hitsList:
+        nextWordList = []
+        text = hit["_source"]["queryText"]
+        text.split(queryString)
+        for i in text.split(queryString)[1].split(" "):
+            if (i.strip() == ""):
+                continue
+            if ('.' in i):
+                nextWordList.append(i)
+                break
+            if (len(nextWordList) == 5):
+                break
+            nextWordList.append(i)
+        responseList.append({
+            "id": hit["_id"],
+            "textString": text,
+            "nextWords": nextWordList
+        })
+    return responseList

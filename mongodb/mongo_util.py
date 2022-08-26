@@ -47,23 +47,23 @@ def searchSections(sectionList: list):
         print(law)
         if law == "cpc":
             for obj in cpc["law"]:
-                if(str(obj["section"]) == str(number)):
+                if (str(obj["section"]) == str(number)):
                     filtered.append(obj)
                     break
 
         if law == "crpc":
 
             for obj in crpc["law"]:
-                if(str(obj["section"]) == str(number)):
+                if (str(obj["section"]) == str(number)):
                     filtered.append(obj)
                     break
 
         if law == "ipc":
             for obj in ipc["law"]:
-                if(str(obj["Section"]) == str(number)):
+                if (str(obj["Section"]) == str(number)):
                     filtered.append(obj)
                     break
         print(filtered)
-        if(filtered != []):
+        if (filtered != []):
             finalMap[section] = filtered[0]
     return finalMap
