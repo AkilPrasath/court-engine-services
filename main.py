@@ -8,7 +8,8 @@ from elasticSearch import ElasticSearchUtil
 from doc_preprocessor.documentParser import DocumentParser
 from pydantic import BaseModel
 from elasticSearchModel import SearchModel
-from mongodb.mongo_util import searchSections, uploadToMongo
+from idRequestModel import IdRequestModel
+from mongodb.mongo_util import getDocument, searchSections, uploadToMongo
 from fastapi.middleware.cors import CORSMiddleware
 
 from sectionModel import SectionModel
@@ -16,12 +17,20 @@ from sectionModel import SectionModel
 from fastapi.middleware.cors import CORSMiddleware
 
 from searchQueryModel import SearchQueryModel
+import sys
+import typing
+from borb.pdf.document.document import Document
+from borb.pdf.pdf import PDF
+from borb.toolkit.text.simple_text_extraction import SimpleTextExtraction
+sys.setrecursionlimit(150000)
 app = FastAPI()
 origins = [
     "http://localhost.tiangolo.com",
     "https://localhost.tiangolo.com",
     "http://localhost",
     "http://localhost:3000",
+    "http://localhost:8000",
+    "http://localhost:9200",
 ]
 
 app.add_middleware(
@@ -41,14 +50,40 @@ def root():
 
 @app.post("/pdfUpload")
 async def uploadPdf(file: UploadFile):
-    print("sadfasdfdsjkfsaldgfhslfujd")
+
     bytes = BytesIO(await file.read())
     parser = DocumentParser(await processPdf(bytes))
     parsedMap = parser.parse()
+    parsedMap["raw_text"] = await rawTextProcess(bytes)
     id = uuid.uuid4()
     elasticSearch = ElasticSearchUtil()
     # await uploadToMongo(bytes, id)
     return elasticSearch.insertToIndex(parsedMap, id)
+
+
+@app.post("/getPDf")
+def getPdf(request: IdRequestModel):
+    # file = getDocument(request.id)
+    elasticSearch = ElasticSearchUtil()
+    return elasticSearch.getDoc(request.id)
+    # doc: typing.Optional[Document] = None
+    # l: SimpleTextExtraction = SimpleTextExtraction()
+    # with open("output.pdf", "rb") as in_file_handle:
+    # doc = PDF.loads(file.read(), [l])
+    # check whether we have read a Document
+    # assert doc is not None
+
+    # print the text on the first Page
+    # doc_text = l.get_text_for_page(0)
+
+    # pdf = PdfFileReader(file)
+    # doc_text = ""
+    # for pageNo in range(pdf.numPages):
+    #     page = pdf.getPage(pageNo)
+    #     text = page.extractText()
+    #     doc_text = doc_text + text+"\n"
+    # print("Docc {0}".format(doc_text))
+    return doc_text
 
 
 @app.post("/summarize")
@@ -67,6 +102,7 @@ async def receivePdf(file: UploadFile):
 def search(searchModel: SearchModel):
     elasticSearch = ElasticSearchUtil()
     print(searchModel.dict)
+    print("Hereee")
     result = elasticSearch.search(searchModel)
     return result
 
@@ -96,26 +132,43 @@ async def processPdf(bytes):
     return doc_text
 
 
+async def rawTextProcess(bytes):
+    pdf = PdfFileReader(bytes)
+    doc_text = ""
+    for pageNo in range(pdf.numPages):
+        page = pdf.getPage(pageNo)
+        text = page.extractText()
+        # text = " ".join(text.split("\n"))
+        doc_text += text
+    return doc_text
+
+
 def processSearchQueryResponse(response, queryString):
     hitsList = response["hits"]["hits"]
     responseList = []
     nextWordList = []
     for hit in hitsList:
+
         nextWordList = []
         text = hit["_source"]["queryText"]
-        text.split(queryString)
-        for i in text.split(queryString)[1].split(" "):
-            if (i.strip() == ""):
+        raw = hit["_source"]["raw_text"]
+        print(queryString.replace(" ", "$"))
+        if(queryString != ""):
+            if(len(text.split(queryString)) < 2):
                 continue
-            if ('.' in i):
+            for i in text.split(queryString)[1].split(" "):
+                if (i.strip() == ""):
+                    continue
+                if ('.' in i):
+                    nextWordList.append(i)
+                    break
+                if (len(nextWordList) == 5):
+                    break
                 nextWordList.append(i)
-                break
-            if (len(nextWordList) == 5):
-                break
-            nextWordList.append(i)
-        responseList.append({
-            "id": hit["_id"],
-            "textString": text,
-            "nextWords": nextWordList
-        })
+            responseList.append({
+                "id": hit["_id"],
+                "raw_text": raw,
+                "textString": text,
+                "nextWords": nextWordList
+            })
     return responseList

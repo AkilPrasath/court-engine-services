@@ -3,11 +3,12 @@ from pydantic import BaseModel
 
 class SearchModel(BaseModel):
     queryText: str
-    date: str
+    fromYear: str
+    toYear: str
     respondent: list
     petitioner: list
     section: list
     text_sections: list
-    court: str = "All"
+    court: list = []
     highCourtLocation: str = ""
-    judgementNumber: str = ""
+    JudgementNumber: str = ""

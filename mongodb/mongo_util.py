@@ -1,3 +1,4 @@
+from fileinput import filename
 import pymongo
 import gridfs
 
@@ -11,10 +12,12 @@ async def uploadToMongo(bytes, id):
     fs = gridfs.GridFS(db)
 
     fid = fs.put(bytes)
-
+    print(type(fid))
+    print(fid)
+    print(id)
     collection = db["judgements"]
-
-    collection.insert_one({"file_id": str(fid), "doc_id": str(id)})
+    print("IDDDDDDDDDDD:")
+    collection.insert_one({"file_id": fid, "doc_id": str(id)})
 
     # print(fs.get(fid).read())
 
@@ -26,7 +29,9 @@ def getDocument(id):
 
     collection = db["judgements"]
     result = collection.find_one({"doc_id": id})
-    bytes = fs.get(result["file_id"]).read()
+    print(result)
+    file = fs.get(result["file_id"])
+    return file
 
 
 def searchSections(sectionList: list):

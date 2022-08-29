@@ -6,6 +6,7 @@ import datefinder
 class DocumentParser():
 
     def __init__(self, raw_text):
+        self.raw_text = raw_text
         self.textSections = []
         self.sections = []
         self.text = re.sub(r'[^\x00-\x7F]+', " ", raw_text)
@@ -57,7 +58,7 @@ class DocumentParser():
             "court": self.courtType,
             "JudgementNumber": self.judgementNumber,
             "highCourtLocation": self.state,
-            "queryText": self.text,
+            "queryText": self.text
         }
 
     def parseSections(self):

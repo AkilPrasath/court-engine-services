@@ -4,6 +4,8 @@ from nltk.tokenize import word_tokenize, sent_tokenize
 
 
 def getVerbs(text):
+    if text == "":
+        return []
     stop_words = set(stopwords.words('english'))
     tokenized = sent_tokenize(text)
     for i in tokenized:
